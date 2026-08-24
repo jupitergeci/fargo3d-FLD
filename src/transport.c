@@ -7,46 +7,45 @@ void VanLeerX(Field *Density, Field *DensStar, Field *Vx_t, real dt) {
   FARGO_SAFE(VanLeerX_b(dt, Density, DensStar, Vx_t));
 }
 
-
-void TransportX(Field *Q, Field *Qs, Field *Vx_t, real dt) { 
-  if (Q != Density){
-     FARGO_SAFE(DivideByRho(Q));
-     __VanLeerX(DivRho, Qs, Vx_t, dt);
-     FARGO_SAFE(UpdateX (dt, Q, Qs, Vx_t));
-  }
-  else{
-     FARGO_SAFE(UpdateDensityX (dt, Q, Vx_t));
+void TransportX(Field *Q, Field *Qs, Field *Vx_t, real dt) {
+  if (Q != Density) {
+    FARGO_SAFE(DivideByRho(Q));
+    __VanLeerX(DivRho, Qs, Vx_t, dt);
+    FARGO_SAFE(UpdateX(dt, Q, Qs, Vx_t));
+  } else {
+    FARGO_SAFE(UpdateDensityX(dt, Q, Vx_t));
   }
 }
+
 void TransportY(Field *Q, Field *Qs, real dt) {
-  if (Q != Density){
+  if (Q != Density) {
     FARGO_SAFE(DivideByRho(Q));
     FARGO_SAFE(VanLeerY_a(DivRho));
     FARGO_SAFE(VanLeerY_b(dt, DivRho, Qs));
-    FARGO_SAFE(UpdateY (dt, Q, Qs));
+    FARGO_SAFE(UpdateY(dt, Q, Qs));
+  } else {
+    FARGO_SAFE(UpdateDensityY(dt, Q));
   }
-  else
-    FARGO_SAFE(UpdateDensityY (dt, Q));
 }
 
 void TransportZ(Field *Q, Field *Qs, real dt) {
-   if (Q != Density){
+  if (Q != Density) {
     FARGO_SAFE(DivideByRho(Q));
     FARGO_SAFE(VanLeerZ_a(DivRho));
     FARGO_SAFE(VanLeerZ_b(dt, DivRho, Qs));
-    FARGO_SAFE(UpdateZ (dt, Q, Qs));
+    FARGO_SAFE(UpdateZ(dt, Q, Qs));
+  } else {
+    FARGO_SAFE(UpdateDensityZ(dt, Q));
   }
-  else
-    FARGO_SAFE(UpdateDensityZ (dt, Q));
 }
 
-void XadvectRAM(Field* F, real dt){
+void XadvectRAM(Field *F, real dt) {
   RamSlopes(F);
   if (toupper(*SPACING) == 'L') AdvectRAMlin(dt,F);
   else AdvectRAM(dt,F);
 }
 
-void X_advection (Field *Vx_t, real dt) {
+void X_advection(Field *Vx_t, real dt) {
 #ifdef X
   __VanLeerX(Density, DensStar, Vx_t, dt);
   TransportX(Mpx, Qs, Vx_t, dt);
@@ -63,11 +62,13 @@ void X_advection (Field *Vx_t, real dt) {
 #ifdef ADIABATIC
   TransportX(Energy, Qs, Vx_t, dt);
 #endif
+#ifdef RADIATION
+  if (Fluidtype == GAS) TransportX(Energyrad, Qs, Vx_t, dt);
+#endif
   TransportX(Density, Qs, Vx_t, dt);
 }
 
-void transport(real dt){
-
+void transport(real dt) {
 #ifdef X
   FARGO_SAFE(momenta_x());
 #endif
@@ -79,7 +80,7 @@ void transport(real dt){
 #endif
 
 #ifdef Z
-  if(NZ>1){
+  if (NZ > 1) {
     FARGO_SAFE(VanLeerZ_a(Density));
     FARGO_SAFE(VanLeerZ_b(dt, Density, DensStar));
 #ifdef X
@@ -97,17 +98,18 @@ void transport(real dt){
 #ifdef ADIABATIC
     TransportZ(Energy, Qs, dt);
 #endif
+#ifdef RADIATION
+    if (Fluidtype == GAS) TransportZ(Energyrad, Qs, dt);
+#endif
     TransportZ(Density, Qs, dt);
   }
 #endif
-  
-  
+
 #ifdef Y
-  if(NY>1){
+  if (NY > 1) {
     FARGO_SAFE(VanLeerY_a(Density));
     FARGO_SAFE(VanLeerY_b(dt, Density, DensStar));
-    
-#ifdef X  
+#ifdef X
     TransportY(Mpx, Qs, dt);
     TransportY(Mmx, Qs, dt);
 #endif
@@ -122,26 +124,28 @@ void transport(real dt){
 #ifdef ADIABATIC
     TransportY(Energy, Qs, dt);
 #endif
+#ifdef RADIATION
+    if (Fluidtype == GAS) TransportY(Energyrad, Qs, dt);
+#endif
     TransportY(Density, Qs, dt);
   }
 #endif
-  
+
 #ifdef X
-  if(NX>1){
+  if (NX > 1) {
 #ifdef STANDARD
     __VanLeerX = VanLeerX;
-    X_advection (Vx_temp, dt);
-#else // FARGO and RAM algorithm below
-    
+    X_advection(Vx_temp, dt);
+#else
     FARGO_SAFE(ComputeResidual(dt));
     __VanLeerX = VanLeerX;
-    X_advection (Vx, dt); // Vx => variable residual
-    
-#ifndef RAM 
-    //__VanLeerX= VanLeerX;
-    __VanLeerX= VanLeerX_PPA;
-    X_advection (Vx_temp, dt); // Vx_temp => fixed residual @ given r. This one only is done with PPA
+    X_advection(Vx, dt);
+
+#ifndef RAM
+    __VanLeerX = VanLeerX_PPA;
+    X_advection(Vx_temp, dt);
     __VanLeerX = VanLeerX;
+
     AdvectSHIFT(Mpx, Nshift);
     AdvectSHIFT(Mmx, Nshift);
 #ifdef Y
@@ -155,32 +159,35 @@ void transport(real dt){
 #ifdef ADIABATIC
     AdvectSHIFT(Energy, Nshift);
 #endif
+#ifdef RADIATION
+    if (Fluidtype == GAS) AdvectSHIFT(Energyrad, Nshift);
+#endif
     AdvectSHIFT(Density, Nshift);
-    
-#else //RAM algorithm below
+#else
     FARGO_SAFE(RamComputeUstar(dt));
-    
+
     XadvectRAM(Mpx,dt);
     XadvectRAM(Mmx,dt);
-    
 #ifdef Y
     XadvectRAM(Mpy,dt);
     XadvectRAM(Mmy,dt);
 #endif
 #ifdef Z
-    XadvectRAM(Mpz, dt);
-    XadvectRAM(Mmz, dt);
+    XadvectRAM(Mpz,dt);
+    XadvectRAM(Mmz,dt);
 #endif
 #ifdef ADIABATIC
-    XadvectRAM(Energy, dt);
+    XadvectRAM(Energy,dt);
+#endif
+#ifdef RADIATION
+    if (Fluidtype == GAS) XadvectRAM(Energyrad,dt);
 #endif
     XadvectRAM(Density,dt);
-
-#endif //RAM
-#endif //no STD
+#endif
+#endif
   }
-#endif //X 
- 
+#endif
+
 #ifdef X
   FARGO_SAFE(NewVelocity_x());
 #endif

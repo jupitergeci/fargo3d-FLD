@@ -12,9 +12,16 @@ void prs_error(char *string){
 
 int PrimitiveVariables () {
   int var=DENS;
+
 #ifdef ADIABATIC
   var |= ENERGY;
 #endif
+
+#ifdef RADIATION
+  if (Fluidtype == GAS)
+    var |= ENERGYRAD;
+#endif
+
 #ifdef X
   var |= VX;
 #endif
@@ -22,11 +29,11 @@ int PrimitiveVariables () {
   var |= VY;
 #endif
 #ifdef Z
-  var |= VZ;  
+  var |= VZ;
 #endif
 
 #ifdef MHD
-  if(Fluidtype==GAS){
+  if (Fluidtype == GAS) {
     var |= BX|BY|BZ;
     var |= EMFX|EMFY|EMFZ;
   }
@@ -623,15 +630,17 @@ void CreateFields() {
 
   Pot     = CreateField("potential", 0,0,0,0);
   Slope   = CreateField("Slope"    , 0,0,0,0);
-  DivRho  = CreateField("DivRho"   , 0,0,0,0);  // This field cannot
-						// be aliased wherever
-						// reductions are
-						// needed
-  
+  DivRho  = CreateField("DivRho"   , 0,0,0,0);
+
   DensStar      = CreateField("DensStar"     , 0,0,0,0);
   Qs            = CreateField("Qs"           , 0,0,0,0);
   Pressure      = CreateField("Pressure"     , 0,0,0,0);
   Total_Density = CreateField("Total_Density", 0,0,0,0);
+
+#ifdef RADIATION
+  Energyrad = CreateField("energyrad", ENERGYRAD, 0,0,0);
+  EnergyradNew = CreateField("energyradnew",0,0,0,0);
+#endif
   
   QL      = CREATEFIELDALIAS("QLeft", Pressure, 0);
   QR      = CreateField("QRight", 0,0,0,0);
@@ -833,6 +842,15 @@ int RestartSimulation(int n) {
     __Restart = RestartVTK;
   }
   __Restart(Density, n);
+
+  if (Fluidtype != DUST)
+    __Restart(Energy, n);
+
+#ifdef RADIATION
+  if (Fluidtype == GAS)
+    __Restart(Energyrad, n);
+#endif
+
 #ifdef X
   __Restart(Vx, n);
 #endif
@@ -842,7 +860,7 @@ int RestartSimulation(int n) {
 #ifdef Z
   __Restart(Vz, n);
 #endif
-      if(Fluidtype != DUST) __Restart(Energy, n);
+
 #ifdef MHD
   __Restart(Bx, n);
   __Restart(By, n);
@@ -855,7 +873,15 @@ int RestartSimulation(int n) {
   offset = 0; //We start at the begining of the file
   
   offset = ParallelIO(Density, n, MPI_MODE_RDONLY, offset,FALSE);
-  if(Fluidtype != DUST)  offset = ParallelIO(Energy, n, MPI_MODE_RDONLY, offset,FALSE);
+
+  if(Fluidtype != DUST)
+    offset = ParallelIO(Energy, n, MPI_MODE_RDONLY, offset,FALSE);
+
+#ifdef RADIATION
+  if (Fluidtype == GAS)
+    offset = ParallelIO(Energyrad, n, MPI_MODE_RDONLY, offset,FALSE);
+#endif
+
 #ifdef X
   offset = ParallelIO(Vx, n, MPI_MODE_RDONLY, offset,FALSE);
 #endif

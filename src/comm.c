@@ -212,8 +212,15 @@ void comm_cpu (int options) {
     special[i] = 0;
   if (options & DENS)
     f[nvar++] = Density;
+
   if (options & ENERGY)
     f[nvar++] = Energy;
+
+#ifdef RADIATION
+  if (options & ENERGYRAD)
+    f[nvar++] = Energyrad;
+#endif
+
 #ifdef X
   if (options & VX)
     f[nvar++] = Vx;

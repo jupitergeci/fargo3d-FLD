@@ -1,0 +1,73 @@
+#;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#       FARGO3D PDS70 PARAMETER FILE - ADIABATIC-OPTIMIZED GRID     ;
+#;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#---------------------
+# CONF                :
+#---------------------
+# --- Grid and Domain Setup (Optimized Base, High Refinement) ---
+
+Setup                   pds70_adb
+Nx			    156	            # Azimuthal 
+Ny			    96	      	    # Radial zones 
+Nz			    32             # Polar zones     			
+Xmin			-3.1415926535
+Xmax			3.1415926535
+Ymin			0.4
+Ymax			2.0
+Zmin			1.4
+Zmax			1.57079632679
+
+
+# --- Non-Uniform Mesh Configuration
+#SPACING     N
+#YMy0		1.0
+#YMc			8.0
+#YMa			0.15
+#YMb			0.3
+
+#XMa			0.1
+#XMb			0.25
+#XMc			8.0
+
+### reference System
+Disk                    YES
+Frame                   C
+
+# --- Core Physical Parameters ---
+AspectRatio		0.072
+Alpha			5.0e-3
+Gamma		    1.4          
+RadDiffCoef    1.0e-4
+
+
+# --- Initial Disk Profile Parameters ---
+#Sigma0			    6.3661977237e-4
+Sigma0              0.05
+SigmaSlope		    1.0
+FlaringIndex		0.3
+
+# --- Planetary System Configuration ---
+PlanetConfig            planets/jupiter.cfg
+RocheSmoothing		    0.12
+IndirectTerm            YES
+#MASSTAPER               62.8318530718 	# 10 orbits to complet planetary mass
+
+# --- Temporal and Output Configuration
+Ntot                    200
+Ninterm                 1
+DT                      6.2831853
+OutputDir               outputs/rad_probe_00
+
+
+
+
+
+
+
+
+
+
+
+
+
+

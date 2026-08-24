@@ -118,6 +118,12 @@ Field *Qs;
 
 Field *Density;
 Field *Energy;
+Field *Energyrad;
+
+#ifdef RADIATION
+Field *EnergyradNew;
+void (*RadiationDiffusionStep)(real,real,Field*,Field*);
+#endif
 Field *Pressure;
 
 Field *Total_Density;

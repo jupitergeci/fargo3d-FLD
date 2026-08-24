@@ -98,6 +98,9 @@ void ChangeArch() {
 
   copy_field = copy_field_cpu;
 
+#ifdef RADIATION
+  RadiationDiffusionStep = RadiationDiffusionStep_cpu;
+#endif
   //MHD------------------------------------------------
   ComputeSlopes = ComputeSlopes_cpu;
   _ComputeStar = _ComputeStar_cpu;
@@ -267,6 +270,16 @@ void ChangeArch() {
 	  printf("Copy field runs on the GPU\n");
 	}
       }
+
+#ifdef RADIATION
+      if (strcmp(name, "radiationdiffusionstep") == 0) {
+        if(strval[0] == 'g'){
+          RadiationDiffusionStep = RadiationDiffusionStep_gpu;
+          printf("RadiationDiffusionStep runs on the GPU\n");
+        }
+      }
+#endif
+      
       if (strcmp(name, "reduction") == 0) {
 	if(strval[0] == 'g'){
 	  reduction_SUM = reduction_SUM_gpu;

@@ -567,6 +567,9 @@ void WriteOutputs(int type) {
   boolean writeenergyrad;
   boolean writetau;
 
+
+
+
   char outputdir[MAXLINELENGTH];
   static int init = 0;
   static int writeoffset = TRUE;
@@ -621,8 +624,16 @@ void WriteOutputs(int type) {
  
   if (WRITEDENSITY)
     offset = ParallelIO(Density, TimeStep, MPI_MODE_WRONLY|MPI_MODE_CREATE, offset,writeoffset);
+
   if (WRITEENERGY)
-        if(Fluidtype != DUST) offset = ParallelIO(Energy, TimeStep, MPI_MODE_WRONLY|MPI_MODE_CREATE, offset,writeoffset);
+    if(Fluidtype != DUST)
+      offset = ParallelIO(Energy, TimeStep, MPI_MODE_WRONLY|MPI_MODE_CREATE, offset,writeoffset);
+
+#ifdef RADIATION
+  if ((Fluidtype == GAS) && WRITEENERGYRAD)
+    offset = ParallelIO(Energyrad, TimeStep, MPI_MODE_WRONLY|MPI_MODE_CREATE, offset,writeoffset);
+#endif
+
 #ifdef X
   if (WRITEVX)
     offset = ParallelIO(Vx, TimeStep, MPI_MODE_WRONLY|MPI_MODE_CREATE, offset,writeoffset);
@@ -663,13 +674,19 @@ void WriteOutputs(int type) {
   }
 #endif
 
-  /// Standard ouput version
+
 #ifndef MPIIO
   if (WRITEDENSITY)
     __WriteField(Density, TimeStep);
   if (WRITEENERGY)
     if(Fluidtype != DUST) __WriteField(Energy, TimeStep);
-#ifdef MHD //MHD is 3D.
+
+#ifdef RADIATION
+  if ((Fluidtype == GAS) && WRITEENERGYRAD)
+    __WriteField(Energyrad, TimeStep);
+#endif
+
+#ifdef MHD
   if(Fluidtype == GAS){
     if (WRITEDIVERGENCE)
       __WriteField(Divergence,TimeStep);
@@ -695,7 +712,7 @@ void WriteOutputs(int type) {
 #endif
 #endif
   
-if (type == ALL){ //We recover the .par variables' value
+if (type == ALL){
     WRITEDENSITY = writedensity;
     WRITEENERGY = writeenergy;
     WRITEBX = writebx;
@@ -704,6 +721,8 @@ if (type == ALL){ //We recover the .par variables' value
     WRITEVX = writevx;
     WRITEVY = writevy;
     WRITEVZ = writevz;
+    WRITEENERGYRAD = writeenergyrad;
+    WRITETAU = writetau;
   }
 
   if(Vtk2dat)

@@ -47,6 +47,17 @@ ex void FindOrbitalElements (StateVector,real,int);
 ex OrbitalElements SV2OE (StateVector, real);
 
 
+//radiation Prototypes
+#ifdef RADIATION
+ex void RadiationDiffusionStep_cpu(real,real,Field*,Field*);
+#endif
+
+#ifdef RADIATION
+ex void RadiationDiffusion(real);
+ex real RadiationDiffusionDt(real);
+#endif
+
+
 //var.c Prototypes
 ex void InitVariables(void);
 ex void Init(void);
@@ -158,6 +169,9 @@ ex void comm_cpu(int);
 ex void comm_gpu(int);
 
 ex void (_collisions_gpu)(real,int,int,int,int);
+#ifdef RADIATION
+ex void RadiationDiffusionStep_gpu(real,real,Field*,Field*);
+#endif
 
 //Monitoring Prototypes
 ex void mon_dens_cpu(void);
@@ -351,10 +365,21 @@ ex void RamSlopes_cpu(Field*);
 
 ex void copy_field_cpu(Field*,Field*);
 
+
+
+
+
+
 //Dust Diffusion module Prototypes
 ex void DustDiffusion_Main(real);
 ex void DustDiffusion_Core_cpu(real);
 ex void DustDiffusion_Coefficients_cpu();
+
+#ifdef RADIATION
+ex void RadiationDiffusionStep_cpu(real,real,Field*,Field*);
+#endif
+
+
 
 //mhd.c Prototypes
 ex void ComputeSlopes_cpu(int, int, int, Field *, Field *);
@@ -654,6 +679,9 @@ ex void (_collisions_cpu)(real,int,int,int,int);
 
 ex void ComputeTotalDensity_cpu(void);
 ex void Floor_cpu(void);
+#ifdef RADIATION
+ex void RadiationDiffusionStep_gpu(real,real,Field*,Field*);
+#endif
 
 
 
