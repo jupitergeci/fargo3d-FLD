@@ -7,8 +7,8 @@
 # --- Grid and Domain Setup (Optimized Base, High Refinement) ---
 
 Setup                   pds70_adb
-Nx			    156	            # Azimuthal 
-Ny			    96	      	    # Radial zones 
+Nx			    256	            # Azimuthal 
+Ny			    192     	    # Radial zones 
 Nz			    32             # Polar zones     			
 Xmin			-3.1415926535
 Xmax			3.1415926535
@@ -56,18 +56,11 @@ IndirectTerm            YES
 Ntot                    200
 Ninterm                 1
 DT                      6.2831853
-OutputDir               outputs/rad_probe_02-p2
+#OutputDir               outputs/rad_probe_02-p2
 
 
+## convergence stable-v2 (parte 3)
 
-
-
-
-
-
-
-
-
-
-
-
+OutputDir               outputs/rad_probe_02-conv-lr
+OutputDir               outputs/rad_probe_02-conv-mr
+OutputDir               outputs/rad_probe_02-conv-hr
