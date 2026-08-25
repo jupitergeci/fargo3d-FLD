@@ -3,11 +3,73 @@
 #ifdef RADIATION
 
 /*
- * Temporary FLD validation parameters.
+ * ================================================================
+ * Temporary FLD validation parameters
+ * ================================================================
  *
  * These values are expressed in code units and are used only during
- * the current dynamic-FLD validation stage. They are not yet the
- * physical Rosseland opacity or physical speed of light.
+ * the current FLD validation stage. They are not yet the physical
+ * Rosseland opacity or physical speed of light.
+ */
+
+/*
+ * Optically thick test.
+ */
+#ifndef RADFLD_THICK_RHO
+#define RADFLD_THICK_RHO 1.0
+#endif
+
+#ifndef RADFLD_THICK_KAPPA
+#define RADFLD_THICK_KAPPA 1.0e6
+#endif
+
+/*
+ * Optically thin test.
+ */
+#ifndef RADFLD_THIN_RHO
+#define RADFLD_THIN_RHO 1.0
+#endif
+
+#ifndef RADFLD_THIN_KAPPA
+#define RADFLD_THIN_KAPPA 1.0e-4
+#endif
+
+#ifndef RADFLD_THIN_SLOPE
+#define RADFLD_THIN_SLOPE 1.0
+#endif
+
+/*
+ * Conservative FLD single-step test.
+ */
+#ifndef RADFLD_CONS_RHO
+#define RADFLD_CONS_RHO 1.0
+#endif
+
+#ifndef RADFLD_CONS_KAPPA
+#define RADFLD_CONS_KAPPA 1.0
+#endif
+
+#ifndef RADFLD_CONS_AMP
+#define RADFLD_CONS_AMP 0.1
+#endif
+
+#ifndef RADFLD_CONS_SIGMA
+#define RADFLD_CONS_SIGMA 0.05
+#endif
+
+#ifndef RADFLD_CONS_RC
+#define RADFLD_CONS_RC 1.0
+#endif
+
+/*
+ * Reduced light speed used only for current explicit validation.
+ */
+#ifndef RADFLD_CLIGHT_TEST
+#define RADFLD_CLIGHT_TEST 1.0e-5
+#endif
+
+/*
+ * Select the opacity appropriate to the active validation problem.
  */
 #ifdef RADFLDTHICKTEST
 
@@ -21,6 +83,12 @@
 #define RADFLD_KAPPA_TEST RADFLD_THIN_KAPPA
 #endif
 
+#elif defined(RADFLDCONSERVTEST)
+
+#ifndef RADFLD_KAPPA_TEST
+#define RADFLD_KAPPA_TEST RADFLD_CONS_KAPPA
+#endif
+
 #else
 
 #ifndef RADFLD_KAPPA_TEST
@@ -29,32 +97,11 @@
 
 #endif
 
-#ifndef RADFLD_THICK_RHO
-#define RADFLD_THICK_RHO 1.0
-#endif
-
-#ifndef RADFLD_THICK_KAPPA
-#define RADFLD_THICK_KAPPA 1.0e6
-#endif
-
-#ifndef RADFLD_CLIGHT_TEST
-#define RADFLD_CLIGHT_TEST 1.0e-5
-#endif
-#ifndef RADFLD_THIN_RHO
-#define RADFLD_THIN_RHO 1.0
-#endif
-
-#ifndef RADFLD_THIN_KAPPA
-#define RADFLD_THIN_KAPPA 1.0e-4
-#endif
-
-#ifndef RADFLD_THIN_SLOPE
-#define RADFLD_THIN_SLOPE 1.0
-#endif
-
 
 /*
- * Manufactured variable-D validation parameters.
+ * ================================================================
+ * Manufactured variable-D validation parameters
+ * ================================================================
  *
  * E_R(r) = A r^2
  * D(r)   = D0 r
@@ -63,6 +110,7 @@
  *
  * div(D grad E_R) = 8 A D0 r.
  */
+
 #ifndef RADFLD_VAR_AMP
 #define RADFLD_VAR_AMP 1.0
 #endif
@@ -77,37 +125,54 @@
 
 
 /*
- * Only one FLD validation path may be active at a time.
+ * ================================================================
+ * Validation-mode consistency
+ * ================================================================
+ */
+
+/*
+ * These are mutually exclusive evolution/operator paths.
  */
 #if (defined(RADFLDVARTEST) + defined(RADFLDOPTEST) + defined(RADFLDFACETEST)) > 1
 #error "RADFLDVARTEST, RADFLDOPTEST and RADFLDFACETEST are mutually exclusive."
 #endif
 
-#if defined(RADFLDTHICKTEST) && defined(RADFLDTHINTEST)
-#error "RADFLDTHICKTEST and RADFLDTHINTEST cannot be enabled simultaneously."
+/*
+ * Only one physical face-FLD benchmark may be active at once.
+ */
+#if (defined(RADFLDTHICKTEST) + defined(RADFLDTHINTEST) + defined(RADFLDCONSERVTEST)) > 1
+#error "RADFLDTHICKTEST, RADFLDTHINTEST and RADFLDCONSERVTEST are mutually exclusive."
 #endif
 
-#if (defined(RADFLDTHICKTEST) || defined(RADFLDTHINTEST)) && !defined(RADFLDFACETEST)
-#error "RADFLDTHICKTEST and RADFLDTHINTEST require RADFLDFACETEST."
-#endif
 /*
- * Explicit FLD stability timestep.
- *
- * RadiationFLDDtField computes, for every active cell,
- *
- *   dt_i = Cdiff / Gamma_i
- *
- * with
- *
- *   Gamma_i = (1/V_i) sum_f (D_f A_f / d_f),
- *
- * and Cdiff = 0.20.
- *
- * RadiationFLDDtField is executed on the selected architecture.
- * In the GPU configuration, Energyrad and Density remain on the
- * device and only the reduced timestep information is transferred
- * back to the host.
+ * Thick, thin and conservation tests require the dynamic face solver.
  */
+#if (defined(RADFLDTHICKTEST) || defined(RADFLDTHINTEST) || defined(RADFLDCONSERVTEST)) && !defined(RADFLDFACETEST)
+#error "Dynamic FLD validation tests require RADFLDFACETEST."
+#endif
+
+
+/*
+ * ================================================================
+ * Dynamic FLD explicit timestep
+ * ================================================================
+ *
+ * RadiationFLDDtField computes
+ *
+ *   dt_i = Cdiff/Gamma_i
+ *
+ * where
+ *
+ *   Gamma_i = (1/V_i) sum_f (D_f A_f/d_f)
+ *
+ * and Cdiff=0.20.
+ *
+ * The cell-wise calculation is performed on the selected
+ * architecture. In GPU mode the full 3D radiation and density
+ * fields remain on the device. FARGO3D's native reduction is then
+ * used to obtain the minimum timestep.
+ */
+
 real RadiationFLDFaceDt(real kappa,real clight,Field* Erad,Field* Rho) {
   real dtlocal;
   real dtglobal;
@@ -115,12 +180,6 @@ real RadiationFLDFaceDt(real kappa,real clight,Field* Erad,Field* Rho) {
   if (kappa <= 0.0 || clight <= 0.0)
     return 1e30;
 
-  /*
-   * Compute the cell-wise FLD timestep field.
-   *
-   * On GPU builds this operates directly on device-resident
-   * Energyrad and Density.
-   */
   FARGO_SAFE(
     RadiationFLDDtField(
       kappa,
@@ -131,14 +190,6 @@ real RadiationFLDFaceDt(real kappa,real clight,Field* Erad,Field* Rho) {
     )
   );
 
-  /*
-   * Native FARGO3D reduction.
-   *
-   * reduction_full_MIN performs the first reduction stage using the
-   * selected Reduction architecture. With Reduction=GPU, the large
-   * 3D field is reduced on the device before the small reduced array
-   * is inspected on the host.
-   */
   dtlocal=reduction_full_MIN(
     RadDt,
     NGHY,
@@ -150,7 +201,6 @@ real RadiationFLDFaceDt(real kappa,real clight,Field* Erad,Field* Rho) {
 #ifdef PARALLEL
 
 #ifdef FLOAT
-
   MPI_Allreduce(
     &dtlocal,
     &dtglobal,
@@ -159,9 +209,7 @@ real RadiationFLDFaceDt(real kappa,real clight,Field* Erad,Field* Rho) {
     MPI_MIN,
     MPI_COMM_WORLD
   );
-
 #else
-
   MPI_Allreduce(
     &dtlocal,
     &dtglobal,
@@ -170,7 +218,6 @@ real RadiationFLDFaceDt(real kappa,real clight,Field* Erad,Field* Rho) {
     MPI_MIN,
     MPI_COMM_WORLD
   );
-
 #endif
 
 #else
@@ -187,15 +234,16 @@ real RadiationFLDFaceDt(real kappa,real clight,Field* Erad,Field* Rho) {
 
 
 /*
- * Validated constant-coefficient diffusion timestep.
+ * ================================================================
+ * Validated constant-D timestep
+ * ================================================================
  *
- * This function is retained unchanged for:
+ * Retained unchanged for:
  *
- *   1. the original constant-D diffusion solver;
+ *   1. the original constant-D radiation solver;
  *   2. RADFLDOPTEST.
- *
- * RADFLDFACETEST does not use this timestep.
  */
+
 real RadiationDiffusionDt(real diffcoef) {
   int i,j,k;
   real dx,dy,dz,rate;
@@ -263,11 +311,9 @@ real RadiationDiffusionDt(real diffcoef) {
   }
 #endif
 
-
 #ifdef PARALLEL
 
 #ifdef FLOAT
-
   MPI_Allreduce(
     &ratemax_local,
     &ratemax_global,
@@ -276,9 +322,7 @@ real RadiationDiffusionDt(real diffcoef) {
     MPI_MAX,
     MPI_COMM_WORLD
   );
-
 #else
-
   MPI_Allreduce(
     &ratemax_local,
     &ratemax_global,
@@ -287,7 +331,6 @@ real RadiationDiffusionDt(real diffcoef) {
     MPI_MAX,
     MPI_COMM_WORLD
   );
-
 #endif
 
 #else
@@ -303,6 +346,12 @@ real RadiationDiffusionDt(real diffcoef) {
 }
 
 
+/*
+ * ================================================================
+ * Radiation diffusion driver
+ * ================================================================
+ */
+
 void RadiationDiffusion(real dt) {
   int n,nsub,gas_index=-1;
   real dtdiff,dtsub;
@@ -310,13 +359,11 @@ void RadiationDiffusion(real dt) {
   if (dt <= 0.0)
     return;
 
-
   /*
    * The original constant-D paths require RADDIFFCOEF.
    *
    * RADFLDVARTEST and RADFLDFACETEST construct their own spatially
-   * dependent diffusion coefficients and therefore do not require
-   * RADDIFFCOEF.
+   * varying coefficients and therefore do not require RADDIFFCOEF.
    */
 #if !defined(RADFLDVARTEST) && !defined(RADFLDFACETEST)
 
@@ -330,8 +377,6 @@ void RadiationDiffusion(real dt) {
    * Restore the gas fluid explicitly.
    *
    * MULTIFLUID() may leave FluidIndex=NFLUIDS after completion.
-   * FillGhosts() and radiation routines must therefore operate with
-   * the gas fluid explicitly selected.
    */
   for (n=0;n<NFLUIDS;n++) {
     if (Fluids[n]->Fluidtype == GAS) {
@@ -346,35 +391,23 @@ void RadiationDiffusion(real dt) {
   FluidIndex=gas_index;
   SelectFluid(FluidIndex);
 
-// #ifdef RADFLDTHICKTEST
 
-//   if (Timestepcount == 0) {
-//     FARGO_SAFE(
-//       RadiationSetThickTest(
-//         RADFLD_THICK_RHO,
-//         1.0e-3,
-//         0.10,
-//         1.0,
-//         Energyrad,
-//         Density
-//       )
-//     );
+  /*
+   * ==============================================================
+   * Controlled dynamic-FLD initial conditions
+   * ==============================================================
+   */
 
-//     FARGO_SAFE(
-//       FillGhosts(
-//         PrimitiveVariables()
-//       )
-//     );
-//   }
-
-// #endif
-
-#if defined(RADFLDTHICKTEST) || defined(RADFLDTHINTEST)
+#if defined(RADFLDTHICKTEST) || defined(RADFLDTHINTEST) || defined(RADFLDCONSERVTEST)
 
   if (Timestepcount == 0) {
 
 #ifdef RADFLDTHICKTEST
 
+    /*
+     * Smooth low-amplitude Gaussian perturbation in a very
+     * optically thick medium.
+     */
     FARGO_SAFE(
       RadiationSetThickTest(
         RADFLD_THICK_RHO,
@@ -388,20 +421,62 @@ void RadiationDiffusion(real dt) {
 
 #endif
 
+
 #ifdef RADFLDTHINTEST
 
-FARGO_SAFE(
-  RadiationSetThinTest(
-    RADFLD_THIN_RHO,
-    RADFLD_THIN_SLOPE,
-    1.0,
-    Energyrad,
-    Density
-  )
-);
+    /*
+     * Monotonic radial exponential field:
+     *
+     *   E_R = exp[-a(r-r0)].
+     *
+     * This produces a controlled optically thin/free-streaming
+     * regime with |grad E|/E approximately constant.
+     */
+    FARGO_SAFE(
+      RadiationSetThinTest(
+        RADFLD_THIN_RHO,
+        RADFLD_THIN_SLOPE,
+        1.0,
+        Energyrad,
+        Density
+      )
+    );
 
 #endif
 
+
+#ifdef RADFLDCONSERVTEST
+
+    /*
+     * Localized Gaussian perturbation used for global conservation:
+     *
+     *   rho = rho0
+     *
+     *   E_R =
+     *     1
+     *     + A exp[-(r-rc)^2/(2 sigma^2)].
+     *
+     * RadiationSetThickTest is reused only as an initializer.
+     * The actual opacity for this test is RADFLD_CONS_KAPPA.
+     */
+    FARGO_SAFE(
+      RadiationSetThickTest(
+        RADFLD_CONS_RHO,
+        RADFLD_CONS_AMP,
+        RADFLD_CONS_SIGMA,
+        RADFLD_CONS_RC,
+        Energyrad,
+        Density
+      )
+    );
+
+#endif
+
+
+    /*
+     * All face-based limiters require valid halos before the
+     * first FLD operator evaluation.
+     */
     FARGO_SAFE(
       FillGhosts(
         PrimitiveVariables()
@@ -412,21 +487,14 @@ FARGO_SAFE(
 #endif
 
 
+  /*
+   * ==============================================================
+   * Manufactured variable-D test
+   * ==============================================================
+   */
+
 #ifdef RADFLDVARTEST
 
-  /*
-   * Manufactured variable-D operator test.
-   *
-   * E_R(r) = A r^2
-   * D(r)   = D0 r
-   *
-   * Exact spherical result:
-   *
-   * div(D grad E_R) = 8 A D0 r.
-   *
-   * RadiationSetVariableTest fills both the active domain and the
-   * required ghost zones explicitly for this controlled test.
-   */
   FARGO_SAFE(
     RadiationSetVariableTest(
       RADFLD_VAR_AMP,
@@ -457,37 +525,38 @@ FARGO_SAFE(
 #endif
 
 
+  /*
+   * ==============================================================
+   * Dynamic face-centered FLD
+   * ==============================================================
+   */
+
 #ifdef RADFLDFACETEST
 
-#ifdef RADFLDTHINTEST
 
   /*
-   * Optically thin single-step validation.
+   * --------------------------------------------------------------
+   * Global conservation single-step test
+   * --------------------------------------------------------------
    *
-   * The thin benchmark is intentionally evolved only once.
-   * Continuing the explicit FLD evolution for many global
-   * timesteps causes the profile to flatten, D_FLD to increase,
-   * and the parabolic explicit timestep to become progressively
-   * restrictive. That behavior is not required to validate the
-   * free-streaming limit.
+   * The localized Gaussian perturbation is sufficiently far from
+   * the domain boundaries that the physical boundary flux is
+   * negligible over one small FLD step.
+   *
+   * The post-step radiation field is frozen after Timestepcount=0,
+   * allowing it to be written at output 1 without further evolution.
    */
+
+#ifdef RADFLDCONSERVTEST
+
   if (Timestepcount == 0) {
 
-    /*
-     * Energyrad and Density must have valid halos because both
-     * the multidimensional face limiter and the timestep use
-     * neighboring cells.
-     */
     FARGO_SAFE(
       FillGhosts(
         PrimitiveVariables()
       )
     );
 
-    /*
-     * Compute the stable explicit timestep for the initial
-     * optically thin state.
-     */
     dtdiff=RadiationFLDFaceDt(
       RADFLD_KAPPA_TEST,
       RADFLD_CLIGHT_TEST,
@@ -496,23 +565,19 @@ FARGO_SAFE(
     );
 
     if (dtdiff <= 0.0 || !isfinite(dtdiff))
-      prs_error("Invalid FLD thin-test timestep.");
+      prs_error("Invalid FLD conservation-test timestep.");
 
     /*
-     * Take only 10% of the explicit stability limit.
-     *
-     * This is deliberately small: the purpose is to verify the
-     * thin-limit FLD flux, not to evolve the profile over a long
-     * radiation-transport time.
+     * Small controlled step.
      */
     dtsub=0.10*dtdiff;
 
     if (dtsub <= 0.0 || !isfinite(dtsub))
-      prs_error("Invalid FLD thin-test substep.");
+      prs_error("Invalid FLD conservation-test substep.");
 
     if (CPU_Master) {
       printf(
-        "FLD_THIN_SINGLE_STEP "
+        "FLD_CONSERV_SINGLE_STEP "
         "step=%d "
         "time=%.12e "
         "dt_global=%.12e "
@@ -549,7 +614,7 @@ FARGO_SAFE(
     );
 
     /*
-     * Synchronize the resulting radiation state.
+     * Synchronize the post-step state.
      */
     FARGO_SAFE(
       FillGhosts(
@@ -558,8 +623,7 @@ FARGO_SAFE(
     );
 
     /*
-     * Evaluate the already validated cell-centered diagnostics
-     * on the post-step radiation state.
+     * Recompute cell-centered FLD diagnostics from the final field.
      */
     FARGO_SAFE(
       RadiationFLDFields(
@@ -574,16 +638,17 @@ FARGO_SAFE(
     );
 
     if (CPU_Master) {
-      printf("FLD_THIN_SINGLE_STEP completed.\n");
+      printf(
+        "FLD_CONSERV_SINGLE_STEP completed.\n"
+      );
       fflush(stdout);
     }
   }
 
   /*
-   * For Timestepcount > 0 the radiation state is intentionally
-   * frozen. FARGO3D may continue advancing PhysicalTime until the
-   * next requested output, but no additional thin-test diffusion
-   * is applied.
+   * For all subsequent global timesteps the radiation field remains
+   * frozen. FARGO3D continues only until the requested output is
+   * written.
    */
   return;
 
@@ -591,10 +656,110 @@ FARGO_SAFE(
 
 
   /*
-   * General dynamic face-FLD evolution.
-   *
-   * This branch is used when RADFLDTHINTEST is not active.
+   * --------------------------------------------------------------
+   * Optically thin single-step test
+   * --------------------------------------------------------------
    */
+
+#ifdef RADFLDTHINTEST
+
+  if (Timestepcount == 0) {
+
+    FARGO_SAFE(
+      FillGhosts(
+        PrimitiveVariables()
+      )
+    );
+
+    dtdiff=RadiationFLDFaceDt(
+      RADFLD_KAPPA_TEST,
+      RADFLD_CLIGHT_TEST,
+      Energyrad,
+      Density
+    );
+
+    if (dtdiff <= 0.0 || !isfinite(dtdiff))
+      prs_error("Invalid FLD thin-test timestep.");
+
+    dtsub=0.10*dtdiff;
+
+    if (dtsub <= 0.0 || !isfinite(dtsub))
+      prs_error("Invalid FLD thin-test substep.");
+
+    if (CPU_Master) {
+      printf(
+        "FLD_THIN_SINGLE_STEP "
+        "step=%d "
+        "time=%.12e "
+        "dt_global=%.12e "
+        "dt_fld=%.12e "
+        "dt_test=%.12e\n",
+        Timestepcount,
+        (double)PhysicalTime,
+        (double)dt,
+        (double)dtdiff,
+        (double)dtsub
+      );
+      fflush(stdout);
+    }
+
+    FARGO_SAFE(
+      RadiationFLDFaceStep(
+        dtsub,
+        RADFLD_KAPPA_TEST,
+        RADFLD_CLIGHT_TEST,
+        Energyrad,
+        Density,
+        EnergyradNew
+      )
+    );
+
+    FARGO_SAFE(
+      copy_field(
+        Energyrad,
+        EnergyradNew
+      )
+    );
+
+    FARGO_SAFE(
+      FillGhosts(
+        PrimitiveVariables()
+      )
+    );
+
+    FARGO_SAFE(
+      RadiationFLDFields(
+        RADFLD_KAPPA_TEST,
+        RADFLD_CLIGHT_TEST,
+        Energyrad,
+        Density,
+        RadR,
+        RadLambda,
+        RadDiff
+      )
+    );
+
+    if (CPU_Master) {
+      printf(
+        "FLD_THIN_SINGLE_STEP completed.\n"
+      );
+      fflush(stdout);
+    }
+  }
+
+  return;
+
+#endif
+
+
+  /*
+   * --------------------------------------------------------------
+   * General dynamic face-centered FLD evolution
+   * --------------------------------------------------------------
+   *
+   * Used, for example, by the thick-limit evolution test.
+   */
+
   {
     real remaining=dt;
     int fld_substep=0;
@@ -616,7 +781,12 @@ FARGO_SAFE(
 
       if (CPU_Master && fld_substep == 0) {
         printf(
-          "FLD_PERF_DIAG step=%d time=%.10e dt=%.10e dtfld=%.10e ratio=%.4e\n",
+          "FLD_PERF_DIAG "
+          "step=%d "
+          "time=%.10e "
+          "dt=%.10e "
+          "dtfld=%.10e "
+          "ratio=%.4e\n",
           Timestepcount,
           (double)PhysicalTime,
           (double)dt,
@@ -664,10 +834,15 @@ FARGO_SAFE(
       fld_substep++;
 
       if (fld_substep > 10000000)
-        prs_error("Too many explicit FLD diffusion substeps.");
+        prs_error(
+          "Too many explicit FLD diffusion substeps."
+        );
     }
   }
 
+  /*
+   * Synchronize final state and compute diagnostics.
+   */
   FARGO_SAFE(
     FillGhosts(
       PrimitiveVariables()
@@ -692,17 +867,23 @@ FARGO_SAFE(
 
 
   /*
-   * ================================================================
+   * ==============================================================
    * Validated constant-D paths
-   * ================================================================
+   * ==============================================================
    */
 
-  dtdiff=RadiationDiffusionDt(RADDIFFCOEF);
+  dtdiff=RadiationDiffusionDt(
+    RADDIFFCOEF
+  );
 
   if (dtdiff <= 0.0 || !isfinite(dtdiff))
-    prs_error("Invalid constant-D radiation diffusion timestep.");
+    prs_error(
+      "Invalid constant-D radiation diffusion timestep."
+    );
 
-  nsub=(int)ceil(dt/dtdiff);
+  nsub=(int)ceil(
+    dt/dtdiff
+  );
 
   if (nsub < 1)
     nsub=1;
@@ -712,10 +893,6 @@ FARGO_SAFE(
 
   for (n=0;n<nsub;n++) {
 
-    /*
-     * Energyrad and Density require valid halo values before
-     * gradients or FLD diagnostics are evaluated.
-     */
     FARGO_SAFE(
       FillGhosts(
         PrimitiveVariables()
@@ -727,10 +904,6 @@ FARGO_SAFE(
 
     /*
      * Constant-D regression of the conservative variable-D operator.
-     *
-     * The complete local RadDiff field is forced to RADDIFFCOEF so
-     * that RadiationDiffusionFLDStep must reduce exactly to the
-     * validated constant-coefficient solver.
      */
     FARGO_SAFE(
       RadiationSetDiffConstant(
@@ -754,14 +927,8 @@ FARGO_SAFE(
     /*
      * Standard diagnostic FLD path.
      *
-     * Compute the already validated cell-centered quantities:
-     *
-     *   R
-     *   lambda
-     *   D_FLD
-     *
-     * The evolution itself remains the original constant-D solver in
-     * this branch.
+     * The actual evolution in this branch still uses the validated
+     * constant-D radiation solver.
      */
     FARGO_SAFE(
       RadiationFLDFields(
@@ -797,7 +964,7 @@ FARGO_SAFE(
 
 
   /*
-   * Synchronize the final radiation state.
+   * Synchronize final radiation state.
    */
   FARGO_SAFE(
     FillGhosts(
@@ -807,8 +974,7 @@ FARGO_SAFE(
 
 
   /*
-   * Recompute diagnostics from the final E_R state so that all output
-   * fields correspond to the same radiation snapshot.
+   * Recompute diagnostics from the final state.
    */
   FARGO_SAFE(
     RadiationFLDFields(
@@ -826,11 +992,9 @@ FARGO_SAFE(
 #ifdef RADFLDOPTEST
 
   /*
-   * During RADFLDOPTEST the actual evolved coefficient was the fixed
-   * RADDIFFCOEF rather than the diagnostic FLD coefficient.
-   *
-   * Restore RadDiff before output so raddiff*.dat records the
-   * coefficient used by the regression operator.
+   * In RADFLDOPTEST the actual evolved coefficient is the fixed
+   * RADDIFFCOEF. Restore RadDiff before output so the diagnostic file
+   * records the coefficient used by that regression.
    */
   FARGO_SAFE(
     RadiationSetDiffConstant(
