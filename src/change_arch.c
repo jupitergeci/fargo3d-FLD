@@ -100,6 +100,7 @@ void ChangeArch() {
 
 #ifdef RADIATION
   RadiationDiffusionStep = RadiationDiffusionStep_cpu;
+  RadiationFLDFields = RadiationFLDFields_cpu;
 #endif
   //MHD------------------------------------------------
   ComputeSlopes = ComputeSlopes_cpu;
@@ -276,6 +277,13 @@ void ChangeArch() {
         if(strval[0] == 'g'){
           RadiationDiffusionStep = RadiationDiffusionStep_gpu;
           printf("RadiationDiffusionStep runs on the GPU\n");
+        }
+      }
+
+      if (strcmp(name, "radiationfldfields") == 0) {
+        if(strval[0] == 'g'){
+          RadiationFLDFields = RadiationFLDFields_gpu;
+          printf("RadiationFLDFields runs on the GPU\n");
         }
       }
 #endif

@@ -225,6 +225,7 @@ MAINOBJ  = LowTasks.o psys.o main.o param.o var.o usage.o            \
 	   dust_diffusion_main.o dust_diffusion_core.o                 \
 	   dust_diffusion_coefficients.o copy_field.o                  \
 	   radiation_diffusion.o radiation_diffusion_main.o            \
+	   radiation_fld.o												\
 	   nimhd_hall_effect.o                                        \
 	   nimhd_hall_effect_emfx.o                                   \
 	   nimhd_hall_effect_emfy.o                                   \
@@ -240,7 +241,7 @@ MAINOBJ  = LowTasks.o psys.o main.o param.o var.o usage.o            \
 	   nimhd_ohmic_diffusion.o                                   \
 	   nimhd_ohmic_diffusion_coeff.o                              \
 	   compute_jx.o compute_jy.o compute_jz.o                      \
-	   mesh.o ram_advect.o ram_advect_lin.o ram_compute_ustar.o ram_plm.o
+	   mesh.o ram_advect.o ram_advect_lin.o ram_compute_ustar.o ram_plm.o 
 
 #-----------------------#Cuda objects---------------------------------
 GPU_OBJ = reduction_sum_device.o reduction_min_device.o \
@@ -281,6 +282,7 @@ GPU_OBJBLOCKS = CompPresIso_gpu.o CompPresAd_gpu.o                  \
 	   resetfield_gpu.o dust_diffusion_core_gpu.o                    \
 	   dust_diffusion_coefficients_gpu.o                             \
 	   radiation_diffusion_gpu.o                                    \
+	   radiation_fld_gpu.o											\
 	   nimhd_hall_effect_emfx_gpu.o                                 \
 	   nimhd_hall_effect_emfy_gpu.o                                 \
 	   nimhd_hall_effect_emfz_gpu.o                                 \

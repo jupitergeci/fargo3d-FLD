@@ -630,8 +630,12 @@ void WriteOutputs(int type) {
       offset = ParallelIO(Energy, TimeStep, MPI_MODE_WRONLY|MPI_MODE_CREATE, offset,writeoffset);
 
 #ifdef RADIATION
-  if ((Fluidtype == GAS) && WRITEENERGYRAD)
-    offset = ParallelIO(Energyrad, TimeStep, MPI_MODE_WRONLY|MPI_MODE_CREATE, offset,writeoffset);
+  if ((Fluidtype == GAS) && WRITEENERGYRAD) {
+    offset = ParallelIO(Energyrad,  TimeStep, MPI_MODE_WRONLY|MPI_MODE_CREATE, offset,writeoffset);
+    offset = ParallelIO(RadR,       TimeStep, MPI_MODE_WRONLY|MPI_MODE_CREATE, offset,writeoffset);
+    offset = ParallelIO(RadLambda,  TimeStep, MPI_MODE_WRONLY|MPI_MODE_CREATE, offset,writeoffset);
+    offset = ParallelIO(RadDiff,    TimeStep, MPI_MODE_WRONLY|MPI_MODE_CREATE, offset,writeoffset);
+  }
 #endif
 
 #ifdef X
@@ -682,8 +686,12 @@ void WriteOutputs(int type) {
     if(Fluidtype != DUST) __WriteField(Energy, TimeStep);
 
 #ifdef RADIATION
-  if ((Fluidtype == GAS) && WRITEENERGYRAD)
+  if ((Fluidtype == GAS) && WRITEENERGYRAD) {
     __WriteField(Energyrad, TimeStep);
+    __WriteField(RadR, TimeStep);
+    __WriteField(RadLambda, TimeStep);
+    __WriteField(RadDiff, TimeStep);
+  }
 #endif
 
 #ifdef MHD

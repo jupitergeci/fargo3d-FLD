@@ -638,8 +638,11 @@ void CreateFields() {
   Total_Density = CreateField("Total_Density", 0,0,0,0);
 
 #ifdef RADIATION
-  Energyrad = CreateField("energyrad", ENERGYRAD, 0,0,0);
+  Energyrad    = CreateField("energyrad",ENERGYRAD,0,0,0);
   EnergyradNew = CreateField("energyradnew",0,0,0,0);
+  RadR         = CreateField("radr",0,0,0,0);
+  RadLambda    = CreateField("radlambda",0,0,0,0);
+  RadDiff      = CreateField("raddiff",0,0,0,0);
 #endif
   
   QL      = CREATEFIELDALIAS("QLeft", Pressure, 0);

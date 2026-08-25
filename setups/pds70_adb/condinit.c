@@ -23,8 +23,20 @@ void Init() {
   v2  = Vy->field_cpu;
   v3  = Vz->field_cpu;
 
+
+#ifdef RADIATION
+  EnergyradNew = CreateField("energyradnew",0,0,0,0);
+  RadR         = CreateField("radr",0,0,0,0);
+  RadLambda    = CreateField("radlambda",0,0,0,0);
+  RadDiff      = CreateField("raddiff",0,0,0,0);
+#endif
+
+
 #ifdef RADIATION
   OUTPUT(Energyrad);
+  OUTPUT(RadR);
+  OUTPUT(RadLambda);
+  OUTPUT(RadDiff);
   erad = Energyrad->field_cpu;
 #endif
 

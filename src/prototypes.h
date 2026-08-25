@@ -50,6 +50,7 @@ ex OrbitalElements SV2OE (StateVector, real);
 //radiation Prototypes
 #ifdef RADIATION
 ex void RadiationDiffusionStep_cpu(real,real,Field*,Field*);
+ex void RadiationFLDFields_cpu(real,real,Field*,Field*,Field*,Field*,Field*);
 #endif
 
 #ifdef RADIATION
@@ -171,6 +172,7 @@ ex void comm_gpu(int);
 ex void (_collisions_gpu)(real,int,int,int,int);
 #ifdef RADIATION
 ex void RadiationDiffusionStep_gpu(real,real,Field*,Field*);
+ex void RadiationFLDFields_gpu(real,real,Field*,Field*,Field*,Field*,Field*);
 #endif
 
 //Monitoring Prototypes
@@ -376,7 +378,7 @@ ex void DustDiffusion_Core_cpu(real);
 ex void DustDiffusion_Coefficients_cpu();
 
 #ifdef RADIATION
-ex void RadiationDiffusionStep_cpu(real,real,Field*,Field*);
+
 #endif
 
 
@@ -680,10 +682,9 @@ ex void (_collisions_cpu)(real,int,int,int,int);
 ex void ComputeTotalDensity_cpu(void);
 ex void Floor_cpu(void);
 #ifdef RADIATION
-ex void RadiationDiffusionStep_gpu(real,real,Field*,Field*);
-#endif
-
-
 
 #endif
 
+
+
+#endif
