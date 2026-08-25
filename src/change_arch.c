@@ -100,8 +100,12 @@ void ChangeArch() {
 
 #ifdef RADIATION
   RadiationDiffusionStep = RadiationDiffusionStep_cpu;
+  RadiationDiffusionFLDStep = RadiationDiffusionFLDStep_cpu;
+  RadiationSetDiffConstant = RadiationSetDiffConstant_cpu;
   RadiationFLDFields = RadiationFLDFields_cpu;
+  RadiationSetVariableTest = RadiationSetVariableTest_cpu;
 #endif
+
   //MHD------------------------------------------------
   ComputeSlopes = ComputeSlopes_cpu;
   _ComputeStar = _ComputeStar_cpu;
@@ -280,10 +284,31 @@ void ChangeArch() {
         }
       }
 
+      if (strcmp(name, "radiationdiffusionfldstep") == 0) {
+        if(strval[0] == 'g'){
+          RadiationDiffusionFLDStep = RadiationDiffusionFLDStep_gpu;
+          printf("RadiationDiffusionFLDStep runs on the GPU\n");
+        }
+      }
+
       if (strcmp(name, "radiationfldfields") == 0) {
         if(strval[0] == 'g'){
           RadiationFLDFields = RadiationFLDFields_gpu;
           printf("RadiationFLDFields runs on the GPU\n");
+        }
+      }
+
+      if (strcmp(name, "radiationsetdiffconstant") == 0) {
+        if(strval[0] == 'g'){
+          RadiationSetDiffConstant = RadiationSetDiffConstant_gpu;
+          printf("RadiationSetDiffConstant runs on the GPU\n");
+        }
+      }
+
+      if (strcmp(name, "radiationsetvariabletest") == 0) {
+        if(strval[0] == 'g'){
+          RadiationSetVariableTest = RadiationSetVariableTest_gpu;
+          printf("RadiationSetVariableTest runs on the GPU\n");
         }
       }
 #endif

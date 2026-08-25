@@ -199,19 +199,15 @@ Field *Energy;
 Field *Energyrad;
 
 #ifdef RADIATION
-
 Field *EnergyradNew;
-
 Field *RadR;
-
 Field *RadLambda;
-
 Field *RadDiff;
-
 void (*RadiationDiffusionStep)(real,real,Field*,Field*);
-
+void (*RadiationDiffusionFLDStep)(real,Field*,Field*,Field*);
 void (*RadiationFLDFields)(real,real,Field*,Field*,Field*,Field*,Field*);
-
+void (*RadiationSetDiffConstant)(real,Field*);
+void (*RadiationSetVariableTest)(real,real,Field*,Field*);
 #endif
 
 Field *Pressure;
