@@ -104,6 +104,9 @@ void ChangeArch() {
   RadiationSetDiffConstant = RadiationSetDiffConstant_cpu;
   RadiationFLDFields = RadiationFLDFields_cpu;
   RadiationSetVariableTest = RadiationSetVariableTest_cpu;
+  RadiationFLDDtField = RadiationFLDDtField_cpu;
+  RadiationSetThickTest = RadiationSetThickTest_cpu;
+  RadiationSetThinTest = RadiationSetThinTest_cpu;
 #endif
 
   //MHD------------------------------------------------
@@ -311,6 +314,35 @@ void ChangeArch() {
           printf("RadiationSetVariableTest runs on the GPU\n");
         }
       }
+
+      if (strcmp(name, "radiationfldfacestep") == 0) {
+        if(strval[0] == 'g'){
+          RadiationFLDFaceStep = RadiationFLDFaceStep_gpu;
+          printf("RadiationFLDFaceStep runs on the GPU\n");
+        }
+      }    
+      
+      if (strcmp(name, "radiationflddtfield") == 0) {
+        if(strval[0] == 'g'){
+          RadiationFLDDtField = RadiationFLDDtField_gpu;
+          printf("RadiationFLDDtField runs on the GPU\n");
+        }
+      }
+
+      if (strcmp(name, "radiationsetthicktest") == 0) {
+        if(strval[0] == 'g'){
+          RadiationSetThickTest = RadiationSetThickTest_gpu;
+          printf("RadiationSetThickTest runs on the GPU\n");
+        }
+      }
+
+      if (strcmp(name, "radiationsetthintest") == 0) {
+        if(strval[0] == 'g'){
+          RadiationSetThinTest = RadiationSetThinTest_gpu;
+          printf("RadiationSetThinTest runs on the GPU\n");
+        }
+      }
+
 #endif
       
       if (strcmp(name, "reduction") == 0) {

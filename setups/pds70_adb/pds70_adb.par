@@ -56,7 +56,7 @@ IndirectTerm            YES
 Ntot                    200
 Ninterm                 1
 DT                      6.2831853
-OutputDir               outputs/rad_probe_02-p2
+OutputDir               outputs/rad_probe_03-thin
 
 
 

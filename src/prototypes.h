@@ -51,14 +51,19 @@ ex OrbitalElements SV2OE (StateVector, real);
 #ifdef RADIATION
 ex void RadiationDiffusionStep_cpu(real,real,Field*,Field*);
 ex void RadiationDiffusionFLDStep_cpu(real,Field*,Field*,Field*);
+ex void RadiationFLDFaceStep_cpu(real,real,real,Field*,Field*,Field*);
 ex void RadiationSetDiffConstant_cpu(real,Field*);
 ex void RadiationSetVariableTest_cpu(real,real,Field*,Field*);
 ex void RadiationFLDFields_cpu(real,real,Field*,Field*,Field*,Field*,Field*);
+ex void RadiationFLDDtField_cpu(real,real,Field*,Field*,Field*);
+ex void RadiationSetThickTest_cpu(real,real,real,real,Field*,Field*);
+ex void RadiationSetThinTest_cpu(real,real,real,Field*,Field*);
 #endif
 
 #ifdef RADIATION
 ex void RadiationDiffusion(real);
 ex real RadiationDiffusionDt(real);
+ex real RadiationFLDFaceDt(real,real,Field*,Field*);
 #endif
 
 
@@ -177,9 +182,13 @@ ex void (_collisions_gpu)(real,int,int,int,int);
 #ifdef RADIATION
 ex void RadiationDiffusionStep_gpu(real,real,Field*,Field*);
 ex void RadiationDiffusionFLDStep_gpu(real,Field*,Field*,Field*);
+ex void RadiationFLDFaceStep_gpu(real,real,real,Field*,Field*,Field*);
 ex void RadiationSetDiffConstant_gpu(real,Field*);
 ex void RadiationSetVariableTest_gpu(real,real,Field*,Field*);
 ex void RadiationFLDFields_gpu(real,real,Field*,Field*,Field*,Field*,Field*);
+ex void RadiationFLDDtField_gpu(real,real,Field*,Field*,Field*);
+ex void RadiationSetThickTest_gpu(real,real,real,real,Field*,Field*);
+ex void RadiationSetThinTest_gpu(real,real,real,Field*,Field*);
 #endif
 
 //Monitoring Prototypes

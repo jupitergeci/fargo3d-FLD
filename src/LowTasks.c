@@ -643,6 +643,7 @@ void CreateFields() {
   RadR         = CreateField("radr",0,0,0,0);
   RadLambda    = CreateField("radlambda",0,0,0,0);
   RadDiff      = CreateField("raddiff",0,0,0,0);
+  RadDt = CreateField("raddt",0,0,0,0);
 #endif
   
   QL      = CREATEFIELDALIAS("QLeft", Pressure, 0);
