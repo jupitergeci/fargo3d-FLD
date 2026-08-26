@@ -192,27 +192,45 @@ Field *DensStar;
 
 Field *Qs;
 
-Field *Density;
-
 Field *Energy;
 
-Field *Energyrad;
+Field *Density;
+
+
+Field *Energy;
+Field *Density;
 
 #ifdef RADIATION
+Field *Energyrad;
 Field *EnergyradNew;
 Field *RadR;
 Field *RadLambda;
 Field *RadDiff;
 Field *RadDt;
+Field *RadKappaR;
+Field *RadStage0;
+Field *RadStage1;
+
+real *SemenovLogKappa_cpu;
+#ifdef GPU
+real *SemenovLogKappa_gpu;
+#endif
+int SemenovOpacityLoaded;
+
 void (*RadiationDiffusionStep)(real,real,Field*,Field*);
 void (*RadiationDiffusionFLDStep)(real,Field*,Field*,Field*);
-void (*RadiationFLDFields)(real,real,Field*,Field*,Field*,Field*,Field*);
+void (*RadiationFLDFields)(real,Field*,Field*,Field*,Field*,Field*,Field*);
 void (*RadiationSetDiffConstant)(real,Field*);
 void (*RadiationSetVariableTest)(real,real,Field*,Field*);
-void (*RadiationFLDFaceStep)(real,real,real,Field*,Field*,Field*);
-void (*RadiationFLDDtField)(real,real,Field*,Field*,Field*);
+void (*RadiationFLDFaceStep)(real,real,Field*,Field*,Field*,Field*);
+void (*RadiationFLDDtField)(real,Field*,Field*,Field*,Field*);
+void (*RadiationFLDOperator)(real,Field*,Field*,Field*,Field*);
+void (*RadiationRKL2Update)(real,real,real,real,real,real,Field*,Field*,Field*,Field*,Field*,Field*);
 void (*RadiationSetThickTest)(real,real,real,real,Field*,Field*);
 void (*RadiationSetThinTest)(real,real,real,Field*,Field*);
+void (*RadiationOpacityTable)(Field*,Field*,Field*);
+void RadiationOpacityTableLoad(void);
+void RadiationOpacityTableFree(void);
 #endif
 
 Field *Pressure;

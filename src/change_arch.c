@@ -104,9 +104,13 @@ void ChangeArch() {
   RadiationSetDiffConstant = RadiationSetDiffConstant_cpu;
   RadiationFLDFields = RadiationFLDFields_cpu;
   RadiationSetVariableTest = RadiationSetVariableTest_cpu;
+  RadiationFLDFaceStep = RadiationFLDFaceStep_cpu;
   RadiationFLDDtField = RadiationFLDDtField_cpu;
   RadiationSetThickTest = RadiationSetThickTest_cpu;
   RadiationSetThinTest = RadiationSetThinTest_cpu;
+  RadiationOpacityTable = RadiationOpacityTable_cpu;
+  RadiationFLDOperator = RadiationFLDOperator_cpu;
+  RadiationRKL2Update = RadiationRKL2Update_cpu;
 #endif
 
   //MHD------------------------------------------------
@@ -342,7 +346,25 @@ void ChangeArch() {
           printf("RadiationSetThinTest runs on the GPU\n");
         }
       }
+      if (strcmp(name, "radiationopacitytable") == 0) {
+        if(strval[0] == 'g'){
+          RadiationOpacityTable = RadiationOpacityTable_gpu;
+          printf("RadiationOpacityTable runs on the GPU\n");
+        }
+      }
 
+      if (strcmp(name, "radiationfldoperator") == 0) {
+        if(strval[0] == 'g'){
+          RadiationFLDOperator = RadiationFLDOperator_gpu;
+          printf("RadiationFLDOperator runs on the GPU\n");
+        }
+      }
+      if (strcmp(name, "radiationrkl2update") == 0) {
+        if(strval[0] == 'g'){
+          RadiationRKL2Update = RadiationRKL2Update_gpu;
+          printf("RadiationRKL2Update runs on the GPU\n");
+        }
+      }
 #endif
       
       if (strcmp(name, "reduction") == 0) {

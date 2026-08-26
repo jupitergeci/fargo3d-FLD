@@ -230,6 +230,10 @@ MAINOBJ  = LowTasks.o psys.o main.o param.o var.o usage.o            \
 	   radiation_diffusion_variable_test.o \
 	   radiation_fld_face.o radiation_fld_dt.o          \
 	   radiation_fld_thick_test.o radiation_fld_thin_test.o \
+	   radiation_opacity_table.o \
+	   radiation_fld_operator.o \
+	   radiation_rkl2.o          \
+	   radiation_rkl2_update.o   \
        nimhd_hall_effect.o                                          \
 	   nimhd_hall_effect_emfx.o                                   \
 	   nimhd_hall_effect_emfy.o                                   \
@@ -291,7 +295,10 @@ GPU_OBJBLOCKS = CompPresIso_gpu.o CompPresAd_gpu.o                  \
 	   radiation_diffusion_fld_test_gpu.o \
 	   radiation_diffusion_variable_test_gpu.o \
 	   radiation_fld_thick_test_gpu.o radiation_fld_thin_test_gpu.o \
-       nimhd_hall_effect_emfx_gpu.o                                 \
+	   radiation_opacity_table_gpu.o \
+	   radiation_fld_operator_gpu.o  \
+ 	   radiation_rkl2_update_gpu.o        \
+	   nimhd_hall_effect_emfx_gpu.o              	                   \
 	   nimhd_hall_effect_emfy_gpu.o                                 \
 	   nimhd_hall_effect_emfz_gpu.o                                 \
 	   nimhd_hall_effect_updateB_gpu.o                              \

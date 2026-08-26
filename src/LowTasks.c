@@ -637,14 +637,21 @@ void CreateFields() {
   Pressure      = CreateField("Pressure"     , 0,0,0,0);
   Total_Density = CreateField("Total_Density", 0,0,0,0);
 
+
 #ifdef RADIATION
-  Energyrad    = CreateField("energyrad",ENERGYRAD,0,0,0);
+  Energyrad = CreateField("energyrad",ENERGYRAD,0,0,0);
   EnergyradNew = CreateField("energyradnew",0,0,0,0);
-  RadR         = CreateField("radr",0,0,0,0);
-  RadLambda    = CreateField("radlambda",0,0,0,0);
-  RadDiff      = CreateField("raddiff",0,0,0,0);
+  RadR = CreateField("radr",0,0,0,0);
+  RadLambda = CreateField("radlambda",0,0,0,0);
+  RadDiff = CreateField("raddiff",0,0,0,0);
   RadDt = CreateField("raddt",0,0,0,0);
+  RadKappaR = CreateField("radkappar",0,0,0,0);
+  RadStage0 = CreateField("radstage0",0,0,0,0);
+  RadStage1 = CreateField("radstage1",0,0,0,0);
+
+  RadiationOpacityTableLoad();
 #endif
+
   
   QL      = CREATEFIELDALIAS("QLeft", Pressure, 0);
   QR      = CreateField("QRight", 0,0,0,0);

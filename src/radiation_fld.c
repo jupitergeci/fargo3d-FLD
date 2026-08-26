@@ -7,11 +7,12 @@
 #include "fargo3d.h"
 //<\INCLUDES>
 
-void RadiationFLDFields_cpu(real kappa,real clight,Field* Erad,Field* Rho,Field* RadR,Field* RadLambda,Field* RadDiff) {
+void RadiationFLDFields_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Field* RadR,Field* RadLambda,Field* RadDiff) {
 
 //<USER_DEFINED>
   INPUT(Erad);
   INPUT(Rho);
+  INPUT(KappaR);
   OUTPUT(RadR);
   OUTPUT(RadLambda);
   OUTPUT(RadDiff);
@@ -20,6 +21,7 @@ void RadiationFLDFields_cpu(real kappa,real clight,Field* Erad,Field* Rho,Field*
 //<EXTERNAL>
   real* erad=Erad->field_cpu;
   real* rho=Rho->field_cpu;
+  real* kappar=KappaR->field_cpu;
   real* radr=RadR->field_cpu;
   real* radlambda=RadLambda->field_cpu;
   real* raddiff=RadDiff->field_cpu;
@@ -42,6 +44,7 @@ void RadiationFLDFields_cpu(real kappa,real clight,Field* Erad,Field* Rho,Field*
   real gradmag;
   real eradloc;
   real rholoc;
+  real kappaloc;
   real chi;
   real R;
   real lambda;
@@ -93,6 +96,7 @@ void RadiationFLDFields_cpu(real kappa,real clight,Field* Erad,Field* Rho,Field*
 
         eradloc=erad[l];
         rholoc=rho[l];
+        kappaloc=kappar[l];
 
         if (eradloc < 1e-30)
           eradloc=1e-30;
@@ -100,7 +104,10 @@ void RadiationFLDFields_cpu(real kappa,real clight,Field* Erad,Field* Rho,Field*
         if (rholoc < 1e-30)
           rholoc=1e-30;
 
-        chi=kappa*rholoc;
+        if (kappaloc < 1e-30)
+          kappaloc=1e-30;
+
+        chi=kappaloc*rholoc;
 
         if (chi < 1e-30)
           chi=1e-30;

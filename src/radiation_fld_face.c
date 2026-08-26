@@ -7,17 +7,19 @@
 #include "fargo3d.h"
 //<\INCLUDES>
 
-void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* Rho,Field* EradNew) {
+void RadiationFLDFaceStep_cpu(real dt,real clight,Field* Erad,Field* Rho,Field* KappaR,Field* EradNew) {
 
 //<USER_DEFINED>
   INPUT(Erad);
   INPUT(Rho);
+  INPUT(KappaR);
   OUTPUT(EradNew);
 //<\USER_DEFINED>
 
 //<EXTERNAL>
   real* erad=Erad->field_cpu;
   real* rho=Rho->field_cpu;
+  real* kappar=KappaR->field_cpu;
   real* eradnew=EradNew->field_cpu;
   int pitch=Pitch_cpu;
   int stride=Stride_cpu;
@@ -35,8 +37,11 @@ void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* 
   real ER;
   real rhoL;
   real rhoR;
+  real kapL;
+  real kapR;
+  real chiL;
+  real chiR;
   real Eface;
-  real rhoface;
   real chi;
 
   real gn;
@@ -116,19 +121,22 @@ void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* 
 
         rhoL=rho[lxm];
         rhoR=rho[l];
+        kapL=kappar[lxm];
+        kapR=kappar[l];
 
         if (EL < 1e-30) EL=1e-30;
         if (ER < 1e-30) ER=1e-30;
         if (rhoL < 1e-30) rhoL=1e-30;
         if (rhoR < 1e-30) rhoR=1e-30;
+        if (kapL < 1e-30) kapL=1e-30;
+        if (kapR < 1e-30) kapR=1e-30;
 
         Eface=0.5*(EL+ER);
-        rhoface=0.5*(rhoL+rhoR);
+        chiL=rhoL*kapL;
+        chiR=rhoR*kapR;
+        chi=0.5*(chiL+chiR);
 
         if (Eface < 1e-30) Eface=1e-30;
-        if (rhoface < 1e-30) rhoface=1e-30;
-
-        chi=kappa*rhoface;
 
         if (chi < 1e-30)
           chi=1e-30;
@@ -216,19 +224,22 @@ void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* 
 
         rhoL=rho[l];
         rhoR=rho[lxp];
+        kapL=kappar[l];
+        kapR=kappar[lxp];
 
         if (EL < 1e-30) EL=1e-30;
         if (ER < 1e-30) ER=1e-30;
         if (rhoL < 1e-30) rhoL=1e-30;
         if (rhoR < 1e-30) rhoR=1e-30;
+        if (kapL < 1e-30) kapL=1e-30;
+        if (kapR < 1e-30) kapR=1e-30;
 
         Eface=0.5*(EL+ER);
-        rhoface=0.5*(rhoL+rhoR);
+        chiL=rhoL*kapL;
+        chiR=rhoR*kapR;
+        chi=0.5*(chiL+chiR);
 
         if (Eface < 1e-30) Eface=1e-30;
-        if (rhoface < 1e-30) rhoface=1e-30;
-
-        chi=kappa*rhoface;
 
         if (chi < 1e-30)
           chi=1e-30;
@@ -320,11 +331,15 @@ void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* 
 
         rhoL=rho[lym];
         rhoR=rho[l];
+        kapL=kappar[lym];
+        kapR=kappar[l];
 
         if (EL < 1e-30) EL=1e-30;
         if (ER < 1e-30) ER=1e-30;
         if (rhoL < 1e-30) rhoL=1e-30;
         if (rhoR < 1e-30) rhoR=1e-30;
+        if (kapL < 1e-30) kapL=1e-30;
+        if (kapR < 1e-30) kapR=1e-30;
 
         den=ymed(j)-ymed(j-1);
 
@@ -332,12 +347,11 @@ void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* 
         wR=(ymin(j)-ymed(j-1))/den;
 
         Eface=wL*EL+wR*ER;
-        rhoface=wL*rhoL+wR*rhoR;
+        chiL=rhoL*kapL;
+        chiR=rhoR*kapR;
+        chi=wL*chiL+wR*chiR;
 
         if (Eface < 1e-30) Eface=1e-30;
-        if (rhoface < 1e-30) rhoface=1e-30;
-
-        chi=kappa*rhoface;
 
         if (chi < 1e-30)
           chi=1e-30;
@@ -425,11 +439,15 @@ void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* 
 
         rhoL=rho[l];
         rhoR=rho[lyp];
+        kapL=kappar[l];
+        kapR=kappar[lyp];
 
         if (EL < 1e-30) EL=1e-30;
         if (ER < 1e-30) ER=1e-30;
         if (rhoL < 1e-30) rhoL=1e-30;
         if (rhoR < 1e-30) rhoR=1e-30;
+        if (kapL < 1e-30) kapL=1e-30;
+        if (kapR < 1e-30) kapR=1e-30;
 
         den=ymed(j+1)-ymed(j);
 
@@ -437,12 +455,11 @@ void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* 
         wR=(ymin(j+1)-ymed(j))/den;
 
         Eface=wL*EL+wR*ER;
-        rhoface=wL*rhoL+wR*rhoR;
+        chiL=rhoL*kapL;
+        chiR=rhoR*kapR;
+        chi=wL*chiL+wR*chiR;
 
         if (Eface < 1e-30) Eface=1e-30;
-        if (rhoface < 1e-30) rhoface=1e-30;
-
-        chi=kappa*rhoface;
 
         if (chi < 1e-30)
           chi=1e-30;
@@ -535,11 +552,15 @@ void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* 
 
         rhoL=rho[lzm];
         rhoR=rho[l];
+        kapL=kappar[lzm];
+        kapR=kappar[l];
 
         if (EL < 1e-30) EL=1e-30;
         if (ER < 1e-30) ER=1e-30;
         if (rhoL < 1e-30) rhoL=1e-30;
         if (rhoR < 1e-30) rhoR=1e-30;
+        if (kapL < 1e-30) kapL=1e-30;
+        if (kapR < 1e-30) kapR=1e-30;
 
         den=zmed(k)-zmed(k-1);
 
@@ -547,12 +568,11 @@ void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* 
         wR=(zmin(k)-zmed(k-1))/den;
 
         Eface=wL*EL+wR*ER;
-        rhoface=wL*rhoL+wR*rhoR;
+        chiL=rhoL*kapL;
+        chiR=rhoR*kapR;
+        chi=wL*chiL+wR*chiR;
 
         if (Eface < 1e-30) Eface=1e-30;
-        if (rhoface < 1e-30) rhoface=1e-30;
-
-        chi=kappa*rhoface;
 
         if (chi < 1e-30)
           chi=1e-30;
@@ -640,11 +660,15 @@ void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* 
 
         rhoL=rho[l];
         rhoR=rho[lzp];
+        kapL=kappar[l];
+        kapR=kappar[lzp];
 
         if (EL < 1e-30) EL=1e-30;
         if (ER < 1e-30) ER=1e-30;
         if (rhoL < 1e-30) rhoL=1e-30;
         if (rhoR < 1e-30) rhoR=1e-30;
+        if (kapL < 1e-30) kapL=1e-30;
+        if (kapR < 1e-30) kapR=1e-30;
 
         den=zmed(k+1)-zmed(k);
 
@@ -652,12 +676,11 @@ void RadiationFLDFaceStep_cpu(real dt,real kappa,real clight,Field* Erad,Field* 
         wR=(zmin(k+1)-zmed(k))/den;
 
         Eface=wL*EL+wR*ER;
-        rhoface=wL*rhoL+wR*rhoR;
+        chiL=rhoL*kapL;
+        chiR=rhoR*kapR;
+        chi=wL*chiL+wR*chiR;
 
         if (Eface < 1e-30) Eface=1e-30;
-        if (rhoface < 1e-30) rhoface=1e-30;
-
-        chi=kappa*rhoface;
 
         if (chi < 1e-30)
           chi=1e-30;

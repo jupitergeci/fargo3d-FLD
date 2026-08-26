@@ -58,7 +58,8 @@ Ninterm                 1
 DT                      6.2831853
 #OutputDir               outputs/rad_probe_04-conservation
 #OutputDir               outputs/rad_probe_05-mpi-1gpu/
-OutputDir               outputs/rad_probe_05-mpi-2gpu/
+OutputDir               outputs/rad_probe_08_clight
+
 
 
 

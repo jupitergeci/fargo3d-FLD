@@ -7,20 +7,20 @@
 #include "fargo3d.h"
 //<\INCLUDES>
 
-void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Field* DtField) {
+void RadiationFLDOperator_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Field* RHS) {
 
 //<USER_DEFINED>
   INPUT(Erad);
   INPUT(Rho);
   INPUT(KappaR);
-  OUTPUT(DtField);
+  OUTPUT(RHS);
 //<\USER_DEFINED>
 
 //<EXTERNAL>
   real* erad=Erad->field_cpu;
   real* rho=Rho->field_cpu;
   real* kappar=KappaR->field_cpu;
-  real* dtfield=DtField->field_cpu;
+  real* rhs=RHS->field_cpu;
   int pitch=Pitch_cpu;
   int stride=Stride_cpu;
   int size_x=Nx+2*NGHX;
@@ -59,10 +59,11 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
   real lambda;
   real Dface;
 
-  real dist;
-  real den;
-  real rate;
+  real fluxm;
+  real fluxp;
+  real divflux;
 
+  real den;
   real wL;
   real wR;
 //<\INTERNAL>
@@ -96,8 +97,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 #endif
 //<#>
 
-        rate=0.0;
-
+        divflux=0.0;
 
 /* ================================================================
  * X- FACE
@@ -125,9 +125,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
         chi=0.5*(chiL+chiR);
 
         if (Eface < 1e-30) Eface=1e-30;
-
-        if (chi < 1e-30)
-          chi=1e-30;
+        if (chi < 1e-30) chi=1e-30;
 
         gn=(ER-EL)*Inv_zone_size_xmed(i,j,k);
 
@@ -178,8 +176,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         R=gradmag/(chi*Eface);
 
-        if (R < 0.0)
-          R=0.0;
+        if (R < 0.0) R=0.0;
 
         if (R < 1e8)
           lambda=(2.0+R)/(6.0+3.0*R+R*R);
@@ -188,11 +185,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         Dface=clight*lambda/chi;
 
-        dist=1.0/Inv_zone_size_xmed(i,j,k);
-
-        if (dist > 0.0)
-          rate+=Dface*SurfX(j,k)/dist;
-
+        fluxm=-Dface*gn;
 
 /* ================================================================
  * X+ FACE
@@ -219,9 +212,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
         chi=0.5*(chiL+chiR);
 
         if (Eface < 1e-30) Eface=1e-30;
-
-        if (chi < 1e-30)
-          chi=1e-30;
+        if (chi < 1e-30) chi=1e-30;
 
         gn=(ER-EL)*Inv_zone_size_xmed(ixp,j,k);
 
@@ -272,8 +263,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         R=gradmag/(chi*Eface);
 
-        if (R < 0.0)
-          R=0.0;
+        if (R < 0.0) R=0.0;
 
         if (R < 1e8)
           lambda=(2.0+R)/(6.0+3.0*R+R*R);
@@ -282,13 +272,11 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         Dface=clight*lambda/chi;
 
-        dist=1.0/Inv_zone_size_xmed(ixp,j,k);
+        fluxp=-Dface*gn;
 
-        if (dist > 0.0)
-          rate+=Dface*SurfX(j,k)/dist;
+        divflux+=fluxp*SurfX(j,k)-fluxm*SurfX(j,k);
 
 #endif
-
 
 /* ================================================================
  * Y- FACE
@@ -321,9 +309,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
         chi=wL*chiL+wR*chiR;
 
         if (Eface < 1e-30) Eface=1e-30;
-
-        if (chi < 1e-30)
-          chi=1e-30;
+        if (chi < 1e-30) chi=1e-30;
 
         gn=(ER-EL)/den;
 
@@ -374,8 +360,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         R=gradmag/(chi*Eface);
 
-        if (R < 0.0)
-          R=0.0;
+        if (R < 0.0) R=0.0;
 
         if (R < 1e8)
           lambda=(2.0+R)/(6.0+3.0*R+R*R);
@@ -384,9 +369,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         Dface=clight*lambda/chi;
 
-        if (den > 0.0)
-          rate+=Dface*SurfY(i,j,k)/den;
-
+        fluxm=-Dface*gn;
 
 /* ================================================================
  * Y+ FACE
@@ -418,9 +401,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
         chi=wL*chiL+wR*chiR;
 
         if (Eface < 1e-30) Eface=1e-30;
-
-        if (chi < 1e-30)
-          chi=1e-30;
+        if (chi < 1e-30) chi=1e-30;
 
         gn=(ER-EL)/den;
 
@@ -471,8 +452,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         R=gradmag/(chi*Eface);
 
-        if (R < 0.0)
-          R=0.0;
+        if (R < 0.0) R=0.0;
 
         if (R < 1e8)
           lambda=(2.0+R)/(6.0+3.0*R+R*R);
@@ -481,11 +461,12 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         Dface=clight*lambda/chi;
 
-        if (den > 0.0)
-          rate+=Dface*SurfY(i,j+1,k)/den;
+        fluxp=-Dface*gn;
+
+        divflux+=fluxp*SurfY(i,j+1,k)
+                -fluxm*SurfY(i,j,k);
 
 #endif
-
 
 /* ================================================================
  * Z- FACE
@@ -518,9 +499,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
         chi=wL*chiL+wR*chiR;
 
         if (Eface < 1e-30) Eface=1e-30;
-
-        if (chi < 1e-30)
-          chi=1e-30;
+        if (chi < 1e-30) chi=1e-30;
 
         gn=(ER-EL)/(ymed(j)*den);
 
@@ -571,8 +550,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         R=gradmag/(chi*Eface);
 
-        if (R < 0.0)
-          R=0.0;
+        if (R < 0.0) R=0.0;
 
         if (R < 1e8)
           lambda=(2.0+R)/(6.0+3.0*R+R*R);
@@ -581,11 +559,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         Dface=clight*lambda/chi;
 
-        dist=ymed(j)*den;
-
-        if (dist > 0.0)
-          rate+=Dface*SurfZ(i,j,k)/dist;
-
+        fluxm=-Dface*gn;
 
 /* ================================================================
  * Z+ FACE
@@ -617,9 +591,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
         chi=wL*chiL+wR*chiR;
 
         if (Eface < 1e-30) Eface=1e-30;
-
-        if (chi < 1e-30)
-          chi=1e-30;
+        if (chi < 1e-30) chi=1e-30;
 
         gn=(ER-EL)/(ymed(j)*den);
 
@@ -670,8 +642,7 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         R=gradmag/(chi*Eface);
 
-        if (R < 0.0)
-          R=0.0;
+        if (R < 0.0) R=0.0;
 
         if (R < 1e8)
           lambda=(2.0+R)/(6.0+3.0*R+R*R);
@@ -680,27 +651,23 @@ void RadiationFLDDtField_cpu(real clight,Field* Erad,Field* Rho,Field* KappaR,Fi
 
         Dface=clight*lambda/chi;
 
-        dist=ymed(j)*den;
+        fluxp=-Dface*gn;
 
-        if (dist > 0.0)
-          rate+=Dface*SurfZ(i,j,k+1)/dist;
+        divflux+=fluxp*SurfZ(i,j,k+1)
+                -fluxm*SurfZ(i,j,k);
 
 #endif
 
-
         /*
-         * Conservative explicit diffusion stability rate:
+         * Semi-discrete conservative FLD operator:
          *
-         * Gamma_i =
+         *   L(E_R) = -div(F_R)
          *
-         *   1/V_i sum_f D_f A_f/d_f
+         * so that
+         *
+         *   dE_R/dt = L(E_R).
          */
-        rate*=InvVol(i,j,k);
-
-        if (rate > 0.0)
-          dtfield[l]=0.20/rate;
-        else
-          dtfield[l]=1e30;
+        rhs[l]=-divflux*InvVol(i,j,k);
 
 //<\#>
 #ifdef X
